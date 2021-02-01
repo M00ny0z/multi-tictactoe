@@ -36,13 +36,13 @@ class GameEngine {
         var that = this;
 
         var getXandY = function (e) {
-            var x = e.clientX - that.ctx.canvas.getBoundingClientRect().left;
-            var y = e.clientY - that.ctx.canvas.getBoundingClientRect().top;
+            var x = e.clientX - that.ctx.canvas.getBoundingClientRect().left - 300;
+            var y = e.clientY - that.ctx.canvas.getBoundingClientRect().top - 100;
 
-            x = Math.floor(x / PARAMS.BLOCKWIDTH);
-            y = Math.floor(y / PARAMS.BLOCKWIDTH);
+            x = Math.floor(x / 175);
+            y = Math.floor(y / 175);
 
-            if (x < 0 || x > PARAMS.MAPWIDTH || y < 0 || y > PARAMS.MAPWIDTH) return null;
+            if (x < 0 || x > 2 || y < 0 || y > 2) return null;
 
             return { x: x, y: y };
         }
@@ -53,63 +53,10 @@ class GameEngine {
         }, false);
 
         this.ctx.canvas.addEventListener("click", function (e) {
-            //console.log(getXandY(e));
+            console.log(getXandY(e));
             that.click = getXandY(e);
         }, false);
 
-        this.ctx.canvas.addEventListener("keydown", function (e) {
-            switch (e.code) {
-                case "ArrowLeft":
-                case "KeyA":
-                    that.left = true;
-                    break;
-                case "ArrowRight":
-                case "KeyD":
-                    that.right = true;
-                    break;
-                case "ArrowUp":
-                case "KeyW":
-                    that.up = true;
-                    break;
-                case "ArrowDown":
-                case "KeyS":
-                    that.down = true;
-                    break;
-                case "KeyZ":
-                    that.B = true;
-                    break;
-                case "KeyX":
-                    that.A = true;
-                    break;
-            }
-        }, false);
-
-        this.ctx.canvas.addEventListener("keyup", function (e) {
-            switch (e.code) {
-                case "ArrowLeft":
-                case "KeyA":
-                    that.left = false;
-                    break;
-                case "ArrowRight":
-                case "KeyD":
-                    that.right = false;
-                    break;
-                case "ArrowUp":
-                case "KeyW":
-                    that.up = false;
-                    break;
-                case "ArrowDown":
-                case "KeyS":
-                    that.down = false;
-                    break;
-                case "KeyZ":
-                    that.B = false;
-                    break;
-                case "KeyX":
-                    that.A = false;
-                    break;
-            }
-        }, false);
     };
 
     addEntity(entity) {
