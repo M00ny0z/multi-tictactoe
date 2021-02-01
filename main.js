@@ -9,5 +9,7 @@ ASSET_MANAGER.downloadAll(function () {
 
 	gameEngine.init(ctx);
 
+	gameEngine.addEntity(new Map());
+
 	gameEngine.start();
 });
