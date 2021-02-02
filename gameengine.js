@@ -32,6 +32,10 @@ class GameEngine {
         })();
     };
 
+    addEntity(entity) {
+        this.entities.push(entity);
+    };
+
     startInput() {
         var that = this;
 
@@ -44,23 +48,17 @@ class GameEngine {
 
             if (x < 0 || x > 2 || y < 0 || y > 2) return null;
 
-            return { x: x, y: y };
+            return { x, y };
         }
 
         this.ctx.canvas.addEventListener("mousemove", function (e) {
-            //console.log(getXandY(e));
             that.mouse = getXandY(e);
         }, false);
 
         this.ctx.canvas.addEventListener("click", function (e) {
-            console.log(getXandY(e));
             that.click = getXandY(e);
         }, false);
 
-    };
-
-    addEntity(entity) {
-        this.entities.push(entity);
     };
 
     draw() {

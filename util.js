@@ -36,6 +36,14 @@ window.requestAnimFrame = (function () {
         };
 })();
 
+function equals(params) {
+    let outcome = true;
+    for (let i = 1; i < params.length; i++) {
+        outcome = outcome && params[i - 1] === params[i];
+    }
+    return outcome;
+}
+
 // add global parameters here
 
 var PARAMS = {
