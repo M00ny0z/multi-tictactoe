@@ -47,5 +47,19 @@ function equals(params) {
 // add global parameters here
 
 var PARAMS = {
-    DEBUG: true
+   DEBUG: true
 };
+
+/**
+  * Checks and reports on the status of the fetch call
+  * @param {String} response - The response from the fetch that was made previously
+  * @return {Promise/String} - The success code OR The error promise that resulted from the fetch
+  */
+async function checkStatus(response) {
+   if (response.status >= 200 && response.status < 300 || response.status === 0) {
+      return response.text();
+   } else {
+      let errorMessage = await response.json();
+      return Promise.reject(new Error(errorMessage.error));
+   }
+}
