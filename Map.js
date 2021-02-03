@@ -15,6 +15,10 @@ class Map {
       //                    [{ x: 725, y: 175 }, { x: 725, y: 350 }, { x: 725, y: 525 }]];
    };
 
+   getState() {
+      return this.state;
+   };
+
    update() {
       if (this.game.click) {
          const x = this.game.click.x;
@@ -23,6 +27,7 @@ class Map {
          if (this.state[y][x] === EMPTY && !this.winner && !this.over) {
             this.state[y][x] = this.turn ? CIRCLE : CROSS;
             this.turn = !this.turn;
+            socket.send(JSON.stringify(this.state));
          }
 
          const winner = this.checkWinner();
