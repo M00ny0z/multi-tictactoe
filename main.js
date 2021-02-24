@@ -2,31 +2,94 @@ var gameEngine = new GameEngine();
 const EMPTY = 0;
 const CIRCLE = 1;
 const CROSS = 2;
+const ONE = true;
+const TWO = false;
+const SOLO = "Solo Game";
+const MULTIPLAYER = "Multiplayer Game";
+
 let gameMap;
+let player;
 
-var ASSET_MANAGER = new AssetManager();
+const ASSET_MANAGER = new AssetManager();
 
-const socket = new WebSocket('ws://localhost:3000');
+let socket;
+let gameCode;
 
-ASSET_MANAGER.downloadAll(function () {
-	var canvas = document.getElementById('gameWorld');
-	var ctx = canvas.getContext('2d');
+/**
+ * Checks and reports on the status of the fetch call
+ * @param {String} response - The response from the fetch that was made previously
+ * @return {Promise/String} - The success code OR The error promise that resulted from the fetch
+ */
+async function checkStatus (response) {
+	if (response.status >= 200 && response.status < 300 || response.status === 0) {
+		return response.text();
+	} else {
+		let errorMessage = await response.json();
+		return Promise.reject(new Error(errorMessage.error));
+	}
+}
 
-	gameMap = new Map(gameEngine);
+const createGame = async () => {
+	fetch('http://localhost:3000/game', { method: 'post' })
+		.then(checkStatus)
+		.then(JSON.parse)
+		.then((res) => {
+			gameCode = res["game-code"];
+			player = ONE;
+			multiplayerGame(res["game-code"], ONE);
+		})
+		.catch(console.log);
+};
 
-	gameEngine.init(ctx);
+const checkGame = async () => {
+	const code = document.getElementById("code-input").value;
+	fetch(`http://localhost:3000/game/${code}`)
+		.then(checkStatus)
+		.then(() => {
+			player = TWO;
+			multiplayerGame(code, TWO)
+		})
+		.catch(console.error);
+};
 
-	gameEngine.addEntity(gameMap);
+const soloGame = () => {
+	document.getElementById("intro-section").classList.add("hidden");
+	startCanvasGame(true, SOLO, "");
+};
 
-	gameEngine.start();
+const multiplayerGame = (code, turn) => {
+	document.getElementById("intro-section").classList.add("hidden");
+	connectToGame(code);
+	startCanvasGame(turn, MULTIPLAYER, code);
+}
 
-	socket.addEventListener('open', function (event) {
-		const gameState = gameMap.getState();
-		socket.send(JSON.stringify(gameState));
+const startCanvasGame = (chosenTurn, type, code) => {
+	ASSET_MANAGER.downloadAll(function () {
+		const canvas = document.getElementById('canvas');
+		const ctx = canvas.getContext('2d');
+	
+		gameMap = new Map(gameEngine, chosenTurn, type, code);
+	
+		gameEngine.init(ctx);
+	
+		gameEngine.addEntity(gameMap);
+	
+		gameEngine.start();
 	});
-});
+	document.getElementById("canvas").classList.remove("hidden");
+};
 
-// Listen for messages
-socket.addEventListener('message', function (event) {
-	console.log(`GameState: ${event.data}`);
-});
+const connectToGame = async (code) => {
+	socket = new WebSocket(`ws://localhost:3000/room/${code}`);
+	socket.addEventListener('open', function (event) {
+		console.log("Successfully opened");
+	});
+};
+
+function main() {
+	document.getElementById("solo-game-btn").addEventListener("click", soloGame);
+	document.getElementById("create-game-btn").addEventListener("click", createGame);
+	document.getElementById("connect-game-btn").addEventListener("click", checkGame);
+}
+
+window.addEventListener("load", main);

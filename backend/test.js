@@ -26,28 +26,25 @@ app.use(multer().none()); // requires the "multer" module
 
 app.use(cors());
 
-app.ws('/room/:code', function(ws, req) {
-
-   ws.on('message', async function(msg) {
-      const parsedRequest = JSON.parse(msg);
-      const gameState = parsedRequest.state;
-      const gameCode = parsedRequest.code;
-      const turn = parsedRequest.turn;
-      if (turn) {
-         await updateGame(gameCode, gameState);
-         //ws.send(JSON.stringify());
-      }
-      //console.log(ws);
-      //console.log(ws.getWss());
-      console.log(ws.server);
-      //ws.server.clients.foreach(client => {
-      //    client.send(JSON.stringify({ "game-code": gameCode, state: gameState }));
-      // });
-   });
-
-   //ws.send(JSON.stringify({ state: "hello world" }));
-   
+app.ws('/:code', async function(ws, req) {
+   console.log(req.params.code);
+   const obj = { message: "Hello World" };
+   ws.send(JSON.stringify(obj));
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function endGame(code) {
    await rmdir(code, { recursive: true });
@@ -61,9 +58,6 @@ async function getGameState(code) {
    const results = await readFile(`${code}/game.json`, 'utf8');
    return results;
 }
-
-// NEED A FUNCTION TO UPDATE GAME STATE FOR SPECIFIED GAME (DONE)
-// NEED A FUNCTION TO END A GAME (DONE)
 
 app.post('/game', async function(req, res) {
    const gameCode = createGameRoomName();
@@ -109,8 +103,3 @@ function createGameRoomName () {
 }
 
 app.listen(port);
-
-function broadcast (message) {
-   wss.clients.forEach( client => {
-   });
-}

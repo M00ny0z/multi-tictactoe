@@ -10,12 +10,25 @@
     <script type="text/javascript" src="./gameengine.js"></script>
     <script type="text/javascript" src="./animator.js"></script>
     <script type="text/javascript" src="./util.js"></script>
-    <script type="text/javascript" src="./main.js"></script>
+    <script type="text/javascript" src="./test.js"></script>
     <script type="text/javascript" src="./Map.js"></script>
-    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!---<canvas id="gameWorld" width="1900" height="1000" style="background: white; border: 1px solid black" tabindex ="0" autofocus></canvas>--->
-    <canvas id="gameWorld" width="1400" height="700" tabindex ="0" autofocus></canvas>
+    <canvas id="canvas" class="hidden" width="1400" height="700" tabindex ="0" autofocus></canvas>
+
+    <div id="intro-section">
+        <h1>Play by yourself or create a game by clicking below!</h1>
+        <button id="solo-game-btn">Start Solo Game</button>
+        <button id="create-game-btn">Create Multiplayer Game</button>
+        <h2>Current Game Code: <span id="game-code"></span></h2>
+        <h2>Or connect to an existing game: </h2>
+        <label>
+            Enter Game Code:
+            <input type="text" id="code-input" minlength="6"/>
+        </label>
+        <button id="connect-game-btn">Connect to Game</button>
+    </div>
 </body>
 </html>

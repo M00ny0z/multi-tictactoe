@@ -1,10 +1,15 @@
 class Map {
-   constructor(game) {
-      this.game = game;
+   constructor(game, turn, type, code, socket) {
+      Object.assign(this, { game, turn, type, code });
       this.state = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-      this.turn = true;
       this.over = false;
       this.winner;
+      if (type === MULTIPLAYER) {
+         socket.onmessage = (e) => {
+            console.log(JSON.parse(e.data));
+            this.turn = !this.turn;
+         };
+      }
 
       this.placements = [[{ x: 375, y: 175 }, { x: 550, y: 175 }, { x: 725, y: 175 }],
                          [{ x: 375, y: 350 }, { x: 550, y: 350 }, { x: 725, y: 350 }],
@@ -20,14 +25,18 @@ class Map {
    };
 
    update() {
-      if (this.game.click) {
+      this.type === SOLO ? this.updateSolo() : this.updateMultiplayer();
+   };
+
+   updateMultiplayer() {
+      if (this.game.click && this.turn) {
          const x = this.game.click.x;
          const y = this.game.click.y;
 
          if (this.state[y][x] === EMPTY && !this.winner && !this.over) {
-            this.state[y][x] = this.turn ? CIRCLE : CROSS;
+            this.state[y][x] = player ? CIRCLE : CROSS;
+            socket.send(JSON.stringify({ state: this.state, code: this.code, turn: this.turn }));
             this.turn = !this.turn;
-            socket.send(JSON.stringify(this.state));
          }
 
          const winner = this.checkWinner();
@@ -42,9 +51,33 @@ class Map {
             this.over = true;
             this.state = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
          }
-
       }
-   };
+   }
+
+   updateSolo() {
+      if (this.game.click) {
+         const x = this.game.click.x;
+         const y = this.game.click.y;
+
+         if (this.state[y][x] === EMPTY && !this.winner && !this.over) {
+            this.state[y][x] = this.turn ? CIRCLE : CROSS;
+            this.turn = !this.turn;
+         }
+
+         const winner = this.checkWinner();
+
+         if (winner === 1 || winner === 2) {
+            this.winner = winner;
+            this.over = true;
+         }
+         
+         if (this.tie() && !winner) {
+            this.winner = 0;
+            this.over = true;
+            this.state = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+         }
+      }
+   }
 
    checkWinner() {
       for (let i = 0; i < this.state.length; i++) {
