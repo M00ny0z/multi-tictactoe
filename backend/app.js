@@ -15,6 +15,7 @@ const expressWs = require('express-ws')(app);
 
 
 const multer = require("multer");
+const { parse } = require('path');
 const port = process.env.PORT || 3000;
 
 // for application/x-www-form-urlencoded
@@ -26,41 +27,56 @@ app.use(multer().none()); // requires the "multer" module
 
 app.use(cors());
 
-app.ws('/room/:code', function(ws, req) {
+const gameStateCont = new Map();
 
-   ws.on('message', async function(msg) {
-      const parsedRequest = JSON.parse(msg);
-      const gameState = parsedRequest.state;
-      const gameCode = parsedRequest.code;
-      const turn = parsedRequest.turn;
-      if (turn) {
-         await updateGame(gameCode, gameState);
-         //ws.send(JSON.stringify());
-      }
-      //console.log(ws);
-      //console.log(ws.getWss());
-      console.log(ws.server);
-      //ws.server.clients.foreach(client => {
-      //    client.send(JSON.stringify({ "game-code": gameCode, state: gameState }));
-      // });
-   });
+const createGameStateCopy = () => {
+   const output = {};
+   for (const [key, value] of gameStateCont) {
+      output[key] = value;
+   }
+   return output;
+};
 
-   //ws.send(JSON.stringify({ state: "hello world" }));
-   
+app.get('/', async function (req, res) {
+   res.send("hello world");
 });
 
-async function endGame(code) {
-   await rmdir(code, { recursive: true });
-}
+const checkConnection = (ws, req, next) => {
+   if (!gameStateCont.has(req.query.code) && parseInt(req.query.player) === 2) {
+      console.log("closing");
+      ws.close();
+   } else {
+      if (parseInt(req.query.player) === 1) {
+         gameStateCont.set(req.query.code, 
+            { 
+               state: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 
+               turn: true 
+            }
+         );
+      }
+      if (parseInt(req.query.player) === 2) {
+         ws.send(JSON.stringify(createGameStateCopy()));
+      }
+      next();
+   }
+};
 
-async function updateGame(code, state) {
-   await writeFile(`${code}/game.json`, JSON.stringify(state), 'utf8');
-}
 
-async function getGameState(code) {
-   const results = await readFile(`${code}/game.json`, 'utf8');
-   return results;
-}
+app.ws('/room', checkConnection, function(ws, req) {
+   
+   ws.on('message', async function(msg) {
+      const parsedRequest = JSON.parse(msg);
+      const gameState = { state: parsedRequest.state, turn: parsedRequest.turn };
+      const gameCode = parsedRequest.code;
+      gameStateCont.set(gameCode, gameState);
+
+      
+      expressWs.getWss().clients.forEach(client => {
+         client.send(JSON.stringify(createGameStateCopy()));
+      });
+   });
+   
+});
 
 // NEED A FUNCTION TO UPDATE GAME STATE FOR SPECIFIED GAME (DONE)
 // NEED A FUNCTION TO END A GAME (DONE)
@@ -68,23 +84,12 @@ async function getGameState(code) {
 app.post('/game', async function(req, res) {
    const gameCode = createGameRoomName();
    try {
-      await mkdir(`${gameCode}`);
       res.set("Content-Type", "application/json");
       res.json({ 'game-code': gameCode });
    } catch (e) {
       const errorMessage = "An error occurred. Please try again later.";
       res.set("Content-Type", "text/plain");
       res.status(500).send(errorMessage);
-   }
-});
-
-app.get('/game/:code', cors(), async function(req, res) {
-   if (fs.existsSync(`./${req.params.code}`)) {
-      res.set("Content-Type", "text/plain");
-      res.send("Game exists.");
-   } else {
-      res.set("Content-Type", "text/plain");
-      res.status(404).send("Game does not exist.");
    }
 });
 
@@ -95,22 +100,19 @@ app.get('/game/:code', cors(), async function(req, res) {
  */
 function createGameRoomName () {
    let output = "";
-
-   for (let i = 0; i < 3; i++) {
-      const letterCode = String.fromCharCode((65 + Math.floor(Math.random() * 26)));
-      output = output + letterCode;
-   }
-
-   for (let i = 0; i < 3; i++) {
-      output = output + Math.floor(Math.random() * 10);
+   
+   while (gameStateCont.has(output) || output == "") {
+      for (let i = 0; i < 3; i++) {
+         const letterCode = String.fromCharCode((65 + Math.floor(Math.random() * 26)));
+         output = output + letterCode;
+      }
+   
+      for (let i = 0; i < 3; i++) {
+         output = output + Math.floor(Math.random() * 10);
+      }
    }
 
    return output;
 }
 
 app.listen(port);
-
-function broadcast (message) {
-   wss.clients.forEach( client => {
-   });
-}
