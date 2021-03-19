@@ -6,8 +6,10 @@ class Map {
       this.winner;
       if (type === MULTIPLAYER) {
          socket.onmessage = (e) => {
-            console.log(JSON.parse(e.data));
-            this.turn = !this.turn;
+            const newState = JSON.parse(e.data)[code];
+            console.log(newState);
+            this.turn = newState.turn;
+            this.state = newState.state;
          };
       }
 
@@ -29,13 +31,13 @@ class Map {
    };
 
    updateMultiplayer() {
-      if (this.game.click && this.turn) {
+      if (this.game.click && this.turn === player) {
          const x = this.game.click.x;
          const y = this.game.click.y;
 
          if (this.state[y][x] === EMPTY && !this.winner && !this.over) {
             this.state[y][x] = player ? CIRCLE : CROSS;
-            socket.send(JSON.stringify({ state: this.state, code: this.code, turn: this.turn }));
+            socket.send(JSON.stringify({ state: this.state, code: this.code, turn: (!this.turn) }));
             this.turn = !this.turn;
          }
 
@@ -129,9 +131,19 @@ class Map {
       let textDisplay = this.turn ? "Your turn!" : "Their turn!";
       let textColor = this.turn ? 'blue' : 'red';
 
+      if (this.type === MULTIPLAYER) {
+         textDisplay = this.turn === player ? "Your turn!" : "Their turn!";
+         textColor = this.turn === player ? 'blue' : 'red';
+      }
+
       if (this.over) {
          textDisplay = this.winner === 1 ? "You won!" : "You lost :(";
          textColor = this.winner === 1 ? 'green' : 'red';
+         if (this.type === MULTIPLAYER) {
+            textDisplay = this.turn !== player ? "You won!" : "You lost :(";
+            textColor = this.turn !== player ? 'green' : 'red';
+         }
+
          if (this.winner === 0) {
             textDisplay = "Tie";
             textColor = 'blue';         
