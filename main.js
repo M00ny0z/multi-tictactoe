@@ -31,7 +31,7 @@ async function checkStatus (response) {
 }
 
 const createGame = async () => {
-	fetch(`http://${URL}/game`, { method: 'post' })
+	fetch(`https://${URL}/game`, { method: 'post' })
 		.then(checkStatus)
 		.then(JSON.parse)
 		.then((res) => {
