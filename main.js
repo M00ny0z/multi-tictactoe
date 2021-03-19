@@ -31,15 +31,18 @@ async function checkStatus (response) {
 }
 
 const createGame = async () => {
-	fetch(`https://${URL}/game`, { method: 'post' })
-		.then(checkStatus)
-		.then(JSON.parse)
-		.then((res) => {
-			gameCode = res["game-code"];
-			player = ONE;
-			multiplayerGame(res["game-code"], ONE);
-		})
-		.catch(console.log);
+	gameCode = createGameRoomName();
+	player = ONE;
+	multiplayerGame(gameCode, ONE);
+	// fetch(`http://${URL}/game`, { method: 'post' })
+	// 	.then(checkStatus)
+	// 	.then(JSON.parse)
+	// 	.then((res) => {
+	// 		gameCode = res["game-code"];
+	// 		player = ONE;
+	// 		multiplayerGame(res["game-code"], ONE);
+	// 	})
+	// 	.catch(console.log);
 };
 
 const checkGame = async () => {
@@ -77,6 +80,26 @@ const startCanvasGame = (chosenTurn, type, code) => {
 	});
 	document.getElementById("canvas").classList.remove("hidden");
 };
+
+/**
+ * Queries the database to retrieve all of the curently tracked pollution types
+ * @param {DBConnection} db - The connection to the APMDB
+ * @return {JSON[]} - The list of pollution types, each containing its pollutionID and name
+ */
+function createGameRoomName () {
+   let output = "";
+   
+	for (let i = 0; i < 3; i++) {
+		const letterCode = String.fromCharCode((65 + Math.floor(Math.random() * 26)));
+		output = output + letterCode;
+	}
+
+	for (let i = 0; i < 3; i++) {
+		output = output + Math.floor(Math.random() * 10);
+	}
+
+   return output;
+}
 
 const connectToGame = async (code) => {
 	const playerState = player ? 1 : 2;
