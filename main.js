@@ -6,6 +6,7 @@ const ONE = true;
 const TWO = false;
 const SOLO = "Solo Game";
 const MULTIPLAYER = "Multiplayer Game";
+const URL = "gameserver-env.eba-95e29jmb.us-east-2.elasticbeanstalk.com";
 
 let gameMap;
 let player;
@@ -30,7 +31,7 @@ async function checkStatus (response) {
 }
 
 const createGame = async () => {
-	fetch('http://localhost:3000/game', { method: 'post' })
+	fetch(`http://${URL}/game`, { method: 'post' })
 		.then(checkStatus)
 		.then(JSON.parse)
 		.then((res) => {
@@ -43,13 +44,8 @@ const createGame = async () => {
 
 const checkGame = async () => {
 	const code = document.getElementById("code-input").value;
-	fetch(`http://localhost:3000/game/${code}`)
-		.then(checkStatus)
-		.then(() => {
-			player = TWO;
-			multiplayerGame(code, TWO)
-		})
-		.catch(console.error);
+	player = TWO;
+	multiplayerGame(code, TWO)
 };
 
 const soloGame = () => {
@@ -58,7 +54,10 @@ const soloGame = () => {
 };
 
 const multiplayerGame = (code, turn) => {
+	const gameCodeElement = document.getElementById("game-code");
 	document.getElementById("intro-section").classList.add("hidden");
+	gameCodeElement.classList.remove("hidden");
+	gameCodeElement.innerText = "Current Game Code: " + code;
 	connectToGame(code);
 	startCanvasGame(turn, MULTIPLAYER, code);
 }
@@ -68,7 +67,7 @@ const startCanvasGame = (chosenTurn, type, code) => {
 		const canvas = document.getElementById('canvas');
 		const ctx = canvas.getContext('2d');
 	
-		gameMap = new Map(gameEngine, chosenTurn, type, code);
+		gameMap = new Map(gameEngine, chosenTurn, type, code, socket);
 	
 		gameEngine.init(ctx);
 	
@@ -80,9 +79,14 @@ const startCanvasGame = (chosenTurn, type, code) => {
 };
 
 const connectToGame = async (code) => {
-	socket = new WebSocket(`ws://localhost:3000/room/${code}`);
+	const playerState = player ? 1 : 2;
+	socket = new WebSocket(`ws://${URL}/room/?code=${code}&player=${playerState}`);
 	socket.addEventListener('open', function (event) {
 		console.log("Successfully opened");
+	});
+
+	socket.addEventListener('close', function (event) {
+		console.log("Closed");
 	});
 };
 
